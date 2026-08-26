@@ -23,7 +23,6 @@ import {
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const metaEnv = (import.meta as any).env;
-const API_BASE = 'http://localhost:3000/api'; // Mock fallback, not used
 
 interface ShopProfile {
   id: string;
@@ -376,6 +375,36 @@ const getLocalShops = (): ShopProfile[] => {
   }
   return shops;
 };
+
+const DRIVE_PHOTO_MAP: { [id: string]: string } = {
+  '1mAUa_5jG1qfWImVO33gbgD_N9HtnNeBC': 'SmarterIT Free 美容院_外観.png',
+  '1k1xAP9U_ee3g7GFt2ing9dOS7qdnLsuP': 'SmarterIT Free 美容院_内観_ナチュラル.png',
+  '138XhATQnllz0IkpqExEhESI_rLhPxdI4': 'SmarterIT Free 美容院_施術カウンセリング.png',
+  '1_5q7104y2Ncboz0IbW40ZSbUHJ_n55fA': 'SmarterIT Free 美容院_施術台.png',
+  '1G8V2hFLfAHCJTg41z4iiqkm07HggjlAs': 'SmarterIT Free 美容院_シャンプー.png',
+  '1I1kNZF7pDHsQEJiCNh3N6QKF0LhPTNHq': 'SmarterIT Free 美容院_女性ボブカット.png',
+  '19xxk0SmmkIc7ULg7NI9FRS8FWpGD-wLv': 'SmarterIT Free 美容院_男性ショートカット.png',
+  '1VtZRTWkrESNOL5n10r6X2GcjDu7_zSK5': 'SmarterIT Free 美容院_お客さまの笑顔.png',
+  '1QN6GSVJQmOyzyEw61hIaU_lBvbmvd_Un': '240_F_497036813_BE7edl7SAT9UdrJycPWSOO4EgyplNfaN.jpg',
+  '1ICy4qoD6qjOr-w4vD6T3I_xEAxMY0N4B': '240_F_677710881_O9cYLkbXmzVRmqM0TMA9FqPiZfzB566q.jpg',
+  '1YRczsnYk5_EpPhY3U7N2RjyyOF8629u_': '240_F_877087459_tn3M02ct0kmxKmtOpy0I2Q4yVTNIG5OC.jpg',
+  '1iLC1rMI5az8xd8nK8tOEK9ZuszpDFHwW': '240_F_1959029839_wC3VN8D4xM4AGrUcFRP6FoLkwuMNSGQj.jpg'
+};
+
+const resolvePhotoUrl = (photoId: string | null | undefined): string => {
+  if (!photoId) return 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=600';
+  if (DRIVE_PHOTO_MAP[photoId]) {
+    return `https://lh3.googleusercontent.com/d/${photoId}=w600`;
+  }
+  if (photoId.startsWith('mock-img-')) {
+    return 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=600';
+  }
+  if (photoId.startsWith('http') || photoId.startsWith('data:')) {
+    return photoId;
+  }
+  return `https://lh3.googleusercontent.com/d/${photoId}=w600`;
+};
+
 const getLocalSettings = (shopId: string): SettingsData => {
   const all = getLocalData('all_settings', {});
   if (!all[shopId]) {
@@ -2036,7 +2065,7 @@ export default function App() {
                               <div className="flex items-start gap-4 bg-slate-50/50 border border-slate-100 rounded-xl p-3.5">
                                 <div className="w-24 h-24 bg-slate-900/5 rounded-xl overflow-hidden border border-slate-200/60 shrink-0 shadow-sm">
                                   <img
-                                    src={`${API_BASE.replace('/api', '')}/api/shops/${currentShop?.id}/drive-images/${d.imageFileId}/view`}
+                                    src={resolvePhotoUrl(d.imageFileId)}
                                     alt={d.dayIndex === -1 ? "投稿済みの写真" : "投稿予定の写真"}
                                     className="object-cover w-full h-full hover:scale-105 transition-transform duration-200"
                                   />
@@ -2270,7 +2299,7 @@ export default function App() {
                     <div key={photo.id} className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm flex flex-col group relative">
                       <div className="aspect-square bg-slate-900/5 relative flex items-center justify-center overflow-hidden border-b border-slate-100">
                         <img
-                          src={photo.dataUrl || `${API_BASE.replace('/api', '')}/api/shops/${currentShop?.id}/drive-images/${photo.id}/view`}
+                          src={resolvePhotoUrl(photo.id || photo.dataUrl)}
                           alt={photo.name}
                           className="object-cover w-full h-full"
                         />
