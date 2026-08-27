@@ -22,8 +22,6 @@ import {
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const metaEnv = (import.meta as any).env;
-
 interface ShopProfile {
   id: string;
   name: string;
@@ -446,6 +444,20 @@ const getLocalDashboard = (shopId: string): DashboardData => {
 // ==========================================
 
 const callGeminiAI = async (apiKey: string, prompt: string): Promise<string> => {
+  if (apiKey === 'SERVERLESS') {
+    const res = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Serverless Gemini generation failed');
+    }
+    const data = await res.json();
+    return data.text;
+  }
+
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
   const result = await model.generateContent(prompt);
@@ -885,7 +897,7 @@ export default function App() {
         const allPhotos = getLocalPhotos(currentShop.id);
         
         let newDay2Text = '';
-        const savedApiKey = localStorage.getItem('demo_gemini_api_key') || metaEnv.VITE_GEMINI_API_KEY || '';
+        const savedApiKey = localStorage.getItem('demo_gemini_api_key') || 'SERVERLESS';
         let usedAI = false;
 
         if (savedApiKey) {
@@ -1239,7 +1251,7 @@ export default function App() {
       try {
         const storeSettings = getLocalSettings(currentShop.id);
         const allPhotos = getLocalPhotos(currentShop.id);
-        const savedApiKey = localStorage.getItem('demo_gemini_api_key') || metaEnv.VITE_GEMINI_API_KEY || '';
+        const savedApiKey = localStorage.getItem('demo_gemini_api_key') || 'SERVERLESS';
         let usedAI = false;
 
         const generateTextForDay = async (idx: number) => {
@@ -1342,7 +1354,7 @@ export default function App() {
 
     setTimeout(async () => {
       try {
-        const savedApiKey = localStorage.getItem('demo_gemini_api_key') || metaEnv.VITE_GEMINI_API_KEY || '';
+        const savedApiKey = localStorage.getItem('demo_gemini_api_key') || 'SERVERLESS';
         const matchingReview = reviews.find(r => r.review_id === reviewId);
         if (!matchingReview) throw new Error('口コミが見つかりませんでした。');
 
