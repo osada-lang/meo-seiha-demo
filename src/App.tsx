@@ -2811,40 +2811,6 @@ export default function App() {
                   })}
                 />
               </div>
-
-              {/* Demo Gemini API Key Setting Card */}
-              <div className="bg-amber-50/50 border border-amber-200/80 rounded-2xl p-4.5 space-y-3 shadow-sm">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-amber-600 animate-pulse" />
-                  <h3 className="text-xs font-black text-amber-900 leading-none">【デモ実演用】Gemini AI 連携設定</h3>
-                </div>
-                <p className="text-[9px] text-amber-700 leading-normal font-bold">
-                  デモでリアルタイムなAI生成（Gemini API）をご利用になる場合は、お持ちの Gemini API キーを入力してください。<br />
-                  キーは暗号化されず、ブラウザの localStorage にのみ安全に保存されます。<br />
-                  ※APIキーが未入力の場合は、自動的に美容室テーマの「高品質ローカルAIテキスト生成（フォールバック）」が動作するため、キーがなくても完全に動作します。
-                </p>
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] font-black text-amber-800 tracking-wider uppercase">
-                    Gemini API キー (AI-KEY)
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="AIzaSy..."
-                    value={localStorage.getItem('demo_gemini_api_key') || ''}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val) {
-                        localStorage.setItem('demo_gemini_api_key', val);
-                      } else {
-                        localStorage.removeItem('demo_gemini_api_key');
-                      }
-                      // trigger state refresh
-                      setSettings({ ...settings });
-                    }}
-                    className="block w-full border border-amber-200 rounded-xl px-3 py-2 text-xs font-bold bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500 placeholder-amber-200"
-                  />
-                </div>
-              </div>
             </div>
 
             {/* Sticky Actions */}
