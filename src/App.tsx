@@ -606,7 +606,6 @@ export default function App() {
 
   // Sub-actions states
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [isToggling, setIsToggling] = useState<boolean>(false);
   const [recentSenders, setRecentSenders] = useState<{ userId: string; displayName: string; timestamp: number }[]>([]);
   const [isDetectingLine, setIsDetectingLine] = useState<boolean>(false);
   const [messageBanner, setMessageBanner] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -850,127 +849,7 @@ export default function App() {
   };
   */
 
-  // Simulate daily posting and rollover slide (Mocked in browser with full Gemini / fallback support!)
-  const handleSimulateRollover = async () => {
-    if (!currentShop || !dashboard || isToggling) return;
-    setIsToggling(true);
 
-    setTimeout(async () => {
-      try {
-        const cleanDrafts = dashboard.draftPosts.filter((d: any) => d.dayIndex !== -1);
-        if (cleanDrafts.length === 0) {
-          throw new Error('下書きが存在しないため、自動生成処理を実行できません。');
-        }
-
-        // 1. The post being published today (Day 0)
-        const publishedPost = cleanDrafts[0];
-        const nextDayMinus1 = {
-          dayIndex: -1,
-          title: '本日投稿済みの下書き',
-          text: publishedPost.text,
-          subKeywords: publishedPost.subKeywords,
-          imageFileId: publishedPost.imageFileId || null,
-          publishedAt: new Date().toISOString(),
-        };
-
-        const draft1 = cleanDrafts[1] || publishedPost;
-        const draft2 = cleanDrafts[2] || publishedPost;
-
-        const nextDay0 = {
-          dayIndex: 0,
-          title: '今日投稿予定の下書き (Day 0)',
-          text: draft1.text,
-          subKeywords: draft1.subKeywords,
-          imageFileId: draft1.imageFileId || null,
-        };
-
-        const nextDay1 = {
-          dayIndex: 1,
-          title: '明日投稿予定の下書き (Day 1)',
-          text: draft2.text,
-          subKeywords: draft2.subKeywords,
-          imageFileId: draft2.imageFileId || null,
-        };
-
-        // 3. Generate a brand new Day 2 draft using Gemini AI or Local fallback!
-        const storeSettings = getLocalSettings(currentShop.id);
-        const allPhotos = getLocalPhotos(currentShop.id);
-        
-        let newDay2Text = '';
-        const savedApiKey = localStorage.getItem('demo_gemini_api_key') || 'SERVERLESS';
-        let usedAI = false;
-
-        if (savedApiKey) {
-          try {
-            const prompt = buildGeminiPostPrompt(currentShop.name, 2, storeSettings);
-            newDay2Text = await callGeminiAI(savedApiKey, prompt);
-            usedAI = true;
-          } catch (geminiErr) {
-            console.warn('Gemini API call failed, using fallback generator:', geminiErr);
-            newDay2Text = generateFallbackPostText(2, storeSettings.keywords.mainKeywords, storeSettings.keywords.subKeywords, storeSettings.keywords.fixedFooter, storeSettings.keywords.customPrompt);
-          }
-        } else {
-          newDay2Text = generateFallbackPostText(2, storeSettings.keywords.mainKeywords, storeSettings.keywords.subKeywords, storeSettings.keywords.fixedFooter, storeSettings.keywords.customPrompt);
-        }
-
-        // Pick a photo (alternating/rotation)
-        let selectedImgId: string | null = null;
-        if (allPhotos.length > 0) {
-          const usedImageIds = cleanDrafts.map(d => d.imageFileId).filter(Boolean);
-          const availablePhotos = allPhotos.filter((p: any) => !usedImageIds.includes(p.id));
-          const finalPhotosPool = availablePhotos.length > 0 ? availablePhotos : allPhotos;
-          selectedImgId = finalPhotosPool[Math.floor(Math.random() * finalPhotosPool.length)].id;
-        }
-
-        const nextDay2 = {
-          dayIndex: 2,
-          title: '明後日投稿予定の下書き (Day 2)',
-          text: newDay2Text,
-          subKeywords: storeSettings.keywords.subKeywords.slice(0, 2),
-          imageFileId: selectedImgId,
-        };
-
-        const newDrafts = [nextDayMinus1, nextDay0, nextDay1, nextDay2];
-        
-        const updatedDashboard = {
-          ...dashboard,
-          draftPosts: newDrafts
-        };
-        saveLocalData(`dashboard_${currentShop.id}`, updatedDashboard);
-        setDashboard(updatedDashboard);
-
-        showBanner('success', `【成功】${usedAI ? '🔑 [リアルGemini AI]' : '🪄 [ローカル高精度AI]'} 自動投稿＆下書きのスライドが完了しました！`);
-      } catch (err: any) {
-        showBanner('error', err.message || 'スライドテストに失敗しました。');
-      } finally {
-        setIsToggling(false);
-      }
-    }, 600);
-  };
-
-  // Clear "本日投稿済み" (-1) draft for testing (Mocked)
-  const handleClearPublished = async () => {
-    if (!currentShop || !dashboard || isToggling) return;
-    if (!confirm('「本日投稿済み」カードを強制リセットして、今日最初の自動投稿テスト（Day 0の公開）を行えるようにしますか？')) return;
-    setIsToggling(true);
-
-    setTimeout(() => {
-      try {
-        const drafts = dashboard.draftPosts.filter((d: any) => d.dayIndex !== -1);
-        const updatedDashboard = {
-          ...dashboard,
-          draftPosts: drafts,
-        };
-        saveLocalData(`dashboard_${currentShop.id}`, updatedDashboard);
-        setDashboard(updatedDashboard);
-        showBanner('success', '🟢 「本日投稿済み」カードを強制リセットし、3日間の予定表示に戻しました！');
-      } catch (err) {
-        showBanner('error', 'リセットに失敗しました。');
-      } finally {
-        setIsToggling(false);
-      }
-    }, 500);
-  };
 
   // Save Settings forms (Mocked)
   const handleSaveSettings = async (e: React.FormEvent) => {
@@ -2182,54 +2061,7 @@ export default function App() {
                     )}
                   </div>
 
-                  {/* 🚨 TEST BUTTON FOR ROLL-OVER */}
-                  {dashboard.draftPosts && dashboard.draftPosts.length > 0 && (
-                    <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-2 mt-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-                          <h4 className="text-xs font-black text-slate-800">【開発デモ検証】毎日自動投稿シミュレーター</h4>
-                        </div>
-                        <span className="text-[8px] font-black bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">DEV ONLY</span>
-                      </div>
-                      <p className="text-[9px] text-slate-500 font-bold leading-normal">
-                        このボタンを押すと、「本日（Day 0）」の下書きがGoogleマップへ実際に送信されます（接続前は疑似送信）。その後、下書きが1日分スライドし、新しく空いた明後日分（Day 2）にGemini AIが自動投稿文を新規生成します。
-                      </p>
-                      <button
-                        type="button"
-                        disabled={isToggling}
-                        onClick={handleSimulateRollover}
-                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[10px] py-2 px-3 rounded-lg shadow transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
-                      >
-                        {isToggling ? (
-                          <RefreshCw className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <>
-                            <Sparkles className="w-3 h-3" />
-                            本日分を自動投稿して下書きをスライド（ロールオーバー）する 🚀
-                          </>
-                        )}
-                      </button>
 
-                      {dashboard.draftPosts.some((d: any) => d.dayIndex === -1) && (
-                        <button
-                          type="button"
-                          disabled={isToggling}
-                          onClick={handleClearPublished}
-                          className="w-full bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-extrabold text-[10px] py-2 px-3 rounded-lg shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 mt-2"
-                        >
-                          {isToggling ? (
-                            <RefreshCw className="w-3 h-3 animate-spin" />
-                          ) : (
-                            <>
-                              <RefreshCw className="w-3 h-3" />
-                              「本日投稿済み」カードを強制リセット（JST日付変更をシミュレート） 🧹
-                            </>
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  )}
             </div>
           </div>
         )
