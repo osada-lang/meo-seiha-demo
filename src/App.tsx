@@ -1543,28 +1543,17 @@ export default function App() {
                   デモ実演用・ID/PW自動入力
                 </span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmail('meoseiha@dairiten.x');
-                    setPassword('meoseiha@dairiten.x');
-                  }}
-                  className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs py-3 px-4 rounded-xl transition-all active:scale-[0.98] border border-indigo-100 shadow-sm flex flex-col items-center justify-center gap-0.5"
-                >
-                  <span className="text-[9px] font-bold opacity-75">代理店デモ</span>
-                  <span>ID/PWを入力 ➔</span>
-                </button>
+              <div className="w-full">
                 <button
                   type="button"
                   onClick={() => {
                     setEmail('meoseiha@avenir');
                     setPassword('meoseiha@avenir');
                   }}
-                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-xs py-3 px-4 rounded-xl transition-all active:scale-[0.98] border border-emerald-100 shadow-sm flex flex-col items-center justify-center gap-0.5"
+                  className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-xs py-3 px-4 rounded-xl transition-all active:scale-[0.98] border border-emerald-100 shadow-sm flex flex-col items-center justify-center gap-0.5"
                 >
                   <span className="text-[9px] font-bold opacity-75">店舗デモ（美容室）</span>
-                  <span>ID/PWを入力 ➔</span>
+                  <span>ID/PWを自動入力 ➔</span>
                 </button>
               </div>
             </div>
