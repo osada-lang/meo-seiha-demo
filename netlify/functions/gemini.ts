@@ -51,7 +51,7 @@ export const handler = async (event: any, context: any) => {
 
     // Initialize Gemini AI on the server side and generate the text
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text().trim();
